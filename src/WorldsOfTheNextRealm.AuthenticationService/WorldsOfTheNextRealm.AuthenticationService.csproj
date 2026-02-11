@@ -10,7 +10,10 @@
     <PackageReference Include="Amazon.Lambda.AspNetCoreServer.Hosting" Version="1.*" />
     <PackageReference Include="DependencyModules.Runtime" Version="1.0.0-RC9153" />
     <PackageReference Include="DependencyModules.SourceGenerator" Version="1.0.0-RC9153" />
+    <PackageReference Include="Konscious.Security.Cryptography.Argon2" Version="1.*" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.8" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.*" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.*" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="WorldsOfTheNextRealm.BackendCommon" Version="0.1.*" />
   </ItemGroup>
