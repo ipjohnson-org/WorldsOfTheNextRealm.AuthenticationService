@@ -1,14 +1,23 @@
+using DependencyModules.Runtime;
+using WorldsOfTheNextRealm.AuthenticationService;
+using WorldsOfTheNextRealm.AuthenticationService.Configuration;
+using WorldsOfTheNextRealm.AuthenticationService.Endpoints;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Register AuthSettings from configuration
+var authSettings = builder.Configuration.GetSection("AuthSettings").Get<AuthSettings>() ?? new AuthSettings();
+builder.Services.AddSingleton(authSettings);
+
+// Register DependencyModules
+builder.Services.AddModule<AuthenticationServiceModule>();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -16,30 +25,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/auth/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+app.MapAuthEndpoints();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
