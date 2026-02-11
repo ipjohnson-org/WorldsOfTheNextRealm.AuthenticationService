@@ -1,0 +1,6 @@
+@WorldsOfTheNextRealm.AuthenticationService_HostAddress = http://localhost:5241
+
+GET {{WorldsOfTheNextRealm.AuthenticationService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

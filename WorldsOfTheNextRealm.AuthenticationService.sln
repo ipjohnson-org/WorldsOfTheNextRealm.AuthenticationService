@@ -1,0 +1,47 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{BB668EEC-D657-489E-B1F5-769DB3B52436}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorldsOfTheNextRealm.AuthenticationService", "src\WorldsOfTheNextRealm.AuthenticationService\WorldsOfTheNextRealm.AuthenticationService.csproj", "{375F43D5-3576-4506-8A3F-A2370AE3A0A9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{06A819CB-9F58-4CD2-BC6D-BB356D9DBE2F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorldsOfTheNextRealm.AuthenticationService.Tests", "tests\WorldsOfTheNextRealm.AuthenticationService.Tests\WorldsOfTheNextRealm.AuthenticationService.Tests.csproj", "{456E1535-67BF-44AC-88C0-52806F76CDF7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cdk", "cdk", "{25A54343-5FA7-4EEA-B55B-D22B85B6CB43}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{95AF6F88-BF41-4266-AF6E-FA19E7F1F81B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cdk", "cdk\src\Cdk\Cdk.csproj", "{48DEFC3D-EAE6-4666-91B6-47627B6BA70F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{375F43D5-3576-4506-8A3F-A2370AE3A0A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{375F43D5-3576-4506-8A3F-A2370AE3A0A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{375F43D5-3576-4506-8A3F-A2370AE3A0A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{375F43D5-3576-4506-8A3F-A2370AE3A0A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{456E1535-67BF-44AC-88C0-52806F76CDF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{456E1535-67BF-44AC-88C0-52806F76CDF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{456E1535-67BF-44AC-88C0-52806F76CDF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{456E1535-67BF-44AC-88C0-52806F76CDF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48DEFC3D-EAE6-4666-91B6-47627B6BA70F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48DEFC3D-EAE6-4666-91B6-47627B6BA70F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48DEFC3D-EAE6-4666-91B6-47627B6BA70F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48DEFC3D-EAE6-4666-91B6-47627B6BA70F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{375F43D5-3576-4506-8A3F-A2370AE3A0A9} = {BB668EEC-D657-489E-B1F5-769DB3B52436}
+		{456E1535-67BF-44AC-88C0-52806F76CDF7} = {06A819CB-9F58-4CD2-BC6D-BB356D9DBE2F}
+		{95AF6F88-BF41-4266-AF6E-FA19E7F1F81B} = {25A54343-5FA7-4EEA-B55B-D22B85B6CB43}
+		{48DEFC3D-EAE6-4666-91B6-47627B6BA70F} = {95AF6F88-BF41-4266-AF6E-FA19E7F1F81B}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,127 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: read
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Authenticate GitHub Packages
+        run: dotnet nuget update source github-ipjohnson-org --username ipjohnson-org --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+  deploy-beta:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: beta
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install CDK CLI
+        run: npm install -g aws-cdk
+
+      - name: Authenticate GitHub Packages
+        run: dotnet nuget update source github-ipjohnson-org --username ipjohnson-org --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+
+      - name: Publish application
+        run: dotnet publish src/WorldsOfTheNextRealm.AuthenticationService/WorldsOfTheNextRealm.AuthenticationService.csproj --configuration Release --output src/WorldsOfTheNextRealm.AuthenticationService/bin/Release/net8.0/publish
+
+      - name: Authenticate GitHub Packages (CDK)
+        run: dotnet nuget update source github-ipjohnson-org --username ipjohnson-org --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+        working-directory: cdk
+
+      - name: Restore CDK dependencies
+        run: dotnet restore src/Cdk/Cdk.csproj
+        working-directory: cdk
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::931846072529:role/GitHubActionsDeployRole
+          aws-region: us-east-1
+
+      - name: CDK Deploy
+        run: cdk deploy --all --require-approval never -c env=beta
+        working-directory: cdk
+
+  deploy-prod:
+    needs: deploy-beta
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install CDK CLI
+        run: npm install -g aws-cdk
+
+      - name: Authenticate GitHub Packages
+        run: dotnet nuget update source github-ipjohnson-org --username ipjohnson-org --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+
+      - name: Publish application
+        run: dotnet publish src/WorldsOfTheNextRealm.AuthenticationService/WorldsOfTheNextRealm.AuthenticationService.csproj --configuration Release --output src/WorldsOfTheNextRealm.AuthenticationService/bin/Release/net8.0/publish
+
+      - name: Authenticate GitHub Packages (CDK)
+        run: dotnet nuget update source github-ipjohnson-org --username ipjohnson-org --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text
+        working-directory: cdk
+
+      - name: Restore CDK dependencies
+        run: dotnet restore src/Cdk/Cdk.csproj
+        working-directory: cdk
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::931846072529:role/GitHubActionsDeployRole
+          aws-region: us-east-1
+
+      - name: CDK Deploy
+        run: cdk deploy --all --require-approval never -c env=prod
+        working-directory: cdk
