@@ -1,6 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace WorldsOfTheNextRealm.AuthenticationService.Entities;
 
 public record EmailLookupData(
-    string NormalizedEmail,
-    string PlayerId,
-    long CreatedAt);
+    [property: JsonPropertyName("ne")] string NormalizedEmail,
+    [property: JsonPropertyName("pid")] string PlayerId,
+    [property: JsonPropertyName("ca")] long CreatedAt);
