@@ -1,5 +1,7 @@
 using DependencyModules.xUnit.Attributes;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
 using WorldsOfTheNextRealm.AuthenticationService.Models;
@@ -27,7 +29,7 @@ public class RegisterEndpointTests
 
         var result = await AuthenticationService.Endpoints.RegisterEndpoint.Handle(
             request, emailValidator, passwordValidator, passwordHasher,
-            tokenService, dataStore, clock, settings);
+            tokenService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(201, httpResult.StatusCode);
@@ -56,12 +58,12 @@ public class RegisterEndpointTests
         // Register first time
         await AuthenticationService.Endpoints.RegisterEndpoint.Handle(
             request, emailValidator, passwordValidator, passwordHasher,
-            tokenService, dataStore, clock, settings);
+            tokenService, dataStore, clock, settings, new NullLoggerFactory());
 
         // Register again with same email
         var result = await AuthenticationService.Endpoints.RegisterEndpoint.Handle(
             request, emailValidator, passwordValidator, passwordHasher,
-            tokenService, dataStore, clock, settings);
+            tokenService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(409, httpResult.StatusCode);
@@ -83,7 +85,7 @@ public class RegisterEndpointTests
 
         var result = await AuthenticationService.Endpoints.RegisterEndpoint.Handle(
             request, emailValidator, passwordValidator, passwordHasher,
-            tokenService, dataStore, clock, settings);
+            tokenService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(422, httpResult.StatusCode);
@@ -105,7 +107,7 @@ public class RegisterEndpointTests
 
         var result = await AuthenticationService.Endpoints.RegisterEndpoint.Handle(
             request, emailValidator, passwordValidator, passwordHasher,
-            tokenService, dataStore, clock, settings);
+            tokenService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(422, httpResult.StatusCode);

@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using DependencyModules.xUnit.Attributes;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
 using WorldsOfTheNextRealm.AuthenticationService.Models;
@@ -110,7 +112,7 @@ public class RevokeEndpointTests
         var httpContext = CreateHttpContext(tokens.AccessToken, new RevokeRequest(tokens.RefreshToken));
 
         var result = await AuthenticationService.Endpoints.RevokeEndpoint.Handle(
-            httpContext, tokenService, dataStore, settings);
+            httpContext, tokenService, dataStore, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(204, httpResult.StatusCode);
@@ -127,7 +129,7 @@ public class RevokeEndpointTests
         var httpContext = CreateHttpContext("invalid-token", new RevokeRequest("some.refresh"));
 
         var result = await AuthenticationService.Endpoints.RevokeEndpoint.Handle(
-            httpContext, tokenService, dataStore, settings);
+            httpContext, tokenService, dataStore, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(401, httpResult.StatusCode);

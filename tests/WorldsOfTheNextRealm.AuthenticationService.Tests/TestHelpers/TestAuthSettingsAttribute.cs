@@ -1,5 +1,6 @@
 using DependencyModules.xUnit.Attributes.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using Xunit.v3;
 
@@ -23,6 +24,7 @@ public class TestAuthSettingsAttribute : Attribute, ITestStartupAttribute
         };
 
         serviceCollection.AddSingleton(settings);
+        serviceCollection.AddLogging();
     }
 
     public Task StartupAsync(IXunitTestMethod testMethod, IServiceProvider serviceProvider)

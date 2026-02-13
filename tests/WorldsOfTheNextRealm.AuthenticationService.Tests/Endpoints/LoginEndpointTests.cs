@@ -1,5 +1,7 @@
 using DependencyModules.xUnit.Attributes;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
 using WorldsOfTheNextRealm.AuthenticationService.Models;
@@ -24,7 +26,7 @@ public class LoginEndpointTests
         await AuthenticationService.Endpoints.RegisterEndpoint.Handle(
             new AuthRequest(email, password),
             emailValidator, passwordValidator, passwordHasher,
-            tokenService, dataStore, clock, settings);
+            tokenService, dataStore, clock, settings, new NullLoggerFactory());
     }
 
     [ModuleTest]
@@ -47,7 +49,7 @@ public class LoginEndpointTests
         var result = await AuthenticationService.Endpoints.LoginEndpoint.Handle(
             new AuthRequest("login@example.com", "StrongPass1"),
             emailValidator, passwordHasher, tokenService,
-            lockoutService, dataStore, clock, settings);
+            lockoutService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(200, httpResult.StatusCode);
@@ -73,7 +75,7 @@ public class LoginEndpointTests
         var result = await AuthenticationService.Endpoints.LoginEndpoint.Handle(
             new AuthRequest("wrongpw@example.com", "WrongPassword1"),
             emailValidator, passwordHasher, tokenService,
-            lockoutService, dataStore, clock, settings);
+            lockoutService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(401, httpResult.StatusCode);
@@ -94,7 +96,7 @@ public class LoginEndpointTests
         var result = await AuthenticationService.Endpoints.LoginEndpoint.Handle(
             new AuthRequest("nobody@example.com", "StrongPass1"),
             emailValidator, passwordHasher, tokenService,
-            lockoutService, dataStore, clock, settings);
+            lockoutService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(401, httpResult.StatusCode);
@@ -123,14 +125,14 @@ public class LoginEndpointTests
             await AuthenticationService.Endpoints.LoginEndpoint.Handle(
                 new AuthRequest("lockout@example.com", "WrongPassword1"),
                 emailValidator, passwordHasher, tokenService,
-                lockoutService, dataStore, clock, settings);
+                lockoutService, dataStore, clock, settings, new NullLoggerFactory());
         }
 
         // 6th attempt should be locked
         var result = await AuthenticationService.Endpoints.LoginEndpoint.Handle(
             new AuthRequest("lockout@example.com", "StrongPass1"),
             emailValidator, passwordHasher, tokenService,
-            lockoutService, dataStore, clock, settings);
+            lockoutService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(403, httpResult.StatusCode);

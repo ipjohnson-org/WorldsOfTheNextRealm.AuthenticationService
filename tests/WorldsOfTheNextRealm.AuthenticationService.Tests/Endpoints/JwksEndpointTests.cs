@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using DependencyModules.xUnit.Attributes;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
 using WorldsOfTheNextRealm.AuthenticationService.Services;
@@ -47,7 +49,7 @@ public class JwksEndpointTests
         var httpContext = new DefaultHttpContext();
 
         var result = await AuthenticationService.Endpoints.JwksEndpoint.Handle(
-            httpContext, signingKeyService);
+            httpContext, signingKeyService, new NullLoggerFactory());
 
         Assert.NotNull(result);
         Assert.Equal("public, max-age=3600", httpContext.Response.Headers.CacheControl.ToString());

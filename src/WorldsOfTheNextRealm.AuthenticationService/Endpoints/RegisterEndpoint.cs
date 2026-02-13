@@ -1,6 +1,8 @@
 using Amazon.DynamoDBv2.Model;
+using Microsoft.Extensions.Logging;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
+using WorldsOfTheNextRealm.AuthenticationService.Logging;
 using WorldsOfTheNextRealm.AuthenticationService.Models;
 using WorldsOfTheNextRealm.AuthenticationService.Services;
 using WorldsOfTheNextRealm.BackendCommon.DataStore;
@@ -17,12 +19,17 @@ public static class RegisterEndpoint
         ITokenService tokenService,
         IDataStore dataStore,
         IClock clock,
-        AuthSettings settings)
+        AuthSettings settings,
+        ILoggerFactory loggerFactory)
     {
+        var logger = loggerFactory.CreateLogger(typeof(RegisterEndpoint).FullName!);
+        logger.LogDebug("Registration attempt for email={MaskedEmail}", LogSanitizer.MaskEmail(request.Email));
+
         // Validate email
         var (emailValid, normalizedEmail, emailError) = emailValidator.Validate(request.Email);
         if (!emailValid)
         {
+            logger.LogDebug("Registration failed: invalid email format");
             return Results.UnprocessableEntity(ErrorResponse.Create(emailError!, "Email format is invalid."));
         }
 
@@ -30,11 +37,13 @@ public static class RegisterEndpoint
         var (passwordValid, passwordError) = passwordValidator.Validate(request.Password);
         if (!passwordValid)
         {
+            logger.LogDebug("Registration failed: password validation error={Error}", passwordError);
             return Results.UnprocessableEntity(ErrorResponse.Create(passwordError!, "Password does not meet requirements."));
         }
 
         // Generate player ID and hash password
         var playerId = Guid.NewGuid().ToString();
+        logger.LogDebug("Generated PlayerId={PlayerId} for registration", playerId);
         var passwordHash = await passwordHasher.Hash(request.Password);
         var nowMs = clock.UtcNow.ToUnixTimeMilliseconds();
 
@@ -61,12 +70,14 @@ public static class RegisterEndpoint
         }
         catch (TransactionCanceledException)
         {
+            logger.LogDebug("Registration failed: duplicate email for PlayerId={PlayerId}", playerId);
             return Results.Conflict(ErrorResponse.Create("email_taken", "This email is already registered."));
         }
 
         // Create token pair
         var authResponse = await tokenService.CreateTokenPair(playerId);
 
+        logger.LogInformation("Registration successful for PlayerId={PlayerId}", playerId);
         return Results.Created("/auth/register", authResponse);
     }
 }

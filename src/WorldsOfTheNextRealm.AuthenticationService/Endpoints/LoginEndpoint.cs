@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Logging;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
+using WorldsOfTheNextRealm.AuthenticationService.Logging;
 using WorldsOfTheNextRealm.AuthenticationService.Models;
 using WorldsOfTheNextRealm.AuthenticationService.Services;
 using WorldsOfTheNextRealm.BackendCommon.DataStore;
@@ -16,8 +18,11 @@ public static class LoginEndpoint
         IAccountLockoutService lockoutService,
         IDataStore dataStore,
         IClock clock,
-        AuthSettings settings)
+        AuthSettings settings,
+        ILoggerFactory loggerFactory)
     {
+        var logger = loggerFactory.CreateLogger(typeof(LoginEndpoint).FullName!);
+        logger.LogDebug("Login attempt for email={MaskedEmail}", LogSanitizer.MaskEmail(request.Email));
         var invalidCredentialsResponse = ErrorResponse.Create("invalid_credentials", "The email or password is incorrect.");
 
         // Normalize email
@@ -26,6 +31,7 @@ public static class LoginEndpoint
         {
             // Still hash dummy to maintain constant time
             await passwordHasher.Verify("dummy", "$argon2id$v=19$m=65536,t=3,p=1$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+            logger.LogDebug("Login failed: invalid email format");
             return Results.Unauthorized();
         }
 
@@ -37,10 +43,12 @@ public static class LoginEndpoint
         {
             // Constant-time: hash dummy password
             await passwordHasher.Verify("dummy", "$argon2id$v=19$m=65536,t=3,p=1$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=");
+            logger.LogDebug("Login failed: email not found");
             return Results.Json(invalidCredentialsResponse, statusCode: 401);
         }
 
         var playerId = emailDoc.Data.PlayerId;
+        logger.LogDebug("Email resolved to PlayerId={PlayerId}", playerId);
 
         // Get credentials
         var credDoc = await dataStore.Get<PlayerCredentialsData>(
@@ -55,12 +63,14 @@ public static class LoginEndpoint
         var (isLocked, updatedDoc) = lockoutService.CheckLockout(credDoc);
         if (isLocked)
         {
+            logger.LogInformation("Login blocked: account locked for PlayerId={PlayerId}", playerId);
             return Results.Json(ErrorResponse.Create("account_locked", "Account is temporarily locked. Try again later."), statusCode: 403);
         }
 
         // If lockout was auto-reset, use the updated doc and persist it
         if (updatedDoc is not null)
         {
+            logger.LogInformation("Account auto-unlocked for PlayerId={PlayerId}", playerId);
             credDoc = await dataStore.Store(updatedDoc);
         }
 
@@ -68,6 +78,7 @@ public static class LoginEndpoint
         var passwordValid = await passwordHasher.Verify(request.Password, credDoc.Data.PasswordHash);
         if (!passwordValid)
         {
+            logger.LogDebug("Login failed: invalid password for PlayerId={PlayerId}", playerId);
             await lockoutService.RecordFailedAttempt(credDoc);
             return Results.Json(invalidCredentialsResponse, statusCode: 401);
         }
@@ -77,6 +88,7 @@ public static class LoginEndpoint
 
         // Create token pair
         var authResponse = await tokenService.CreateTokenPair(playerId);
+        logger.LogInformation("Login successful for PlayerId={PlayerId}", playerId);
         return Results.Ok(authResponse);
     }
 }

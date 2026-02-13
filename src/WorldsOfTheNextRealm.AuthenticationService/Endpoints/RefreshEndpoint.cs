@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
@@ -15,19 +16,24 @@ public static class RefreshEndpoint
         ISigningKeyService signingKeyService,
         IDataStore dataStore,
         IClock clock,
-        AuthSettings settings)
+        AuthSettings settings,
+        ILoggerFactory loggerFactory)
     {
+        var logger = loggerFactory.CreateLogger(typeof(RefreshEndpoint).FullName!);
         var invalidTokenResponse = ErrorResponse.Create("invalid_token", "The refresh token is invalid or expired.");
 
         // Parse refresh token: {familyId}.{randomPart}
         var dotIndex = request.RefreshToken?.IndexOf('.');
         if (dotIndex is null or < 1)
         {
+            logger.LogDebug("Refresh failed: invalid token format");
             return Results.Json(invalidTokenResponse, statusCode: 401);
         }
 
         var familyId = request.RefreshToken![..dotIndex.Value];
         var tokenHash = TokenService.ComputeSha256(request.RefreshToken);
+
+        logger.LogDebug("Refresh attempt for familyId={FamilyId}", familyId);
 
         // Get family
         var familyDoc = await dataStore.Get<RefreshTokenFamilyData>(
@@ -35,6 +41,7 @@ public static class RefreshEndpoint
 
         if (familyDoc is null)
         {
+            logger.LogDebug("Refresh failed: family not found for familyId={FamilyId}", familyId);
             return Results.Json(invalidTokenResponse, statusCode: 401);
         }
 
@@ -44,6 +51,7 @@ public static class RefreshEndpoint
         // Check if revoked or expired
         if (family.Status == "revoked" || family.ExpiresAt <= nowMs)
         {
+            logger.LogDebug("Refresh failed: token expired or revoked for familyId={FamilyId}", familyId);
             return Results.Json(invalidTokenResponse, statusCode: 401);
         }
 
@@ -51,6 +59,7 @@ public static class RefreshEndpoint
         if (family.CurrentTokenHash != tokenHash)
         {
             // Replay detected — revoke the entire family
+            logger.LogWarning("Token replay detected for familyId={FamilyId} PlayerId={PlayerId}", familyId, family.PlayerId);
             var revokedFamily = family with { Status = "revoked" };
             var revokedDoc = familyDoc with { Data = revokedFamily };
             await dataStore.Store(revokedDoc);
@@ -95,6 +104,7 @@ public static class RefreshEndpoint
 
         var accessToken = handler.CreateToken(descriptor);
 
+        logger.LogDebug("Refresh successful for familyId={FamilyId} sequence={Sequence}", familyId, updatedFamily.Sequence);
         return Results.Ok(new AuthResponse(accessToken, newRefreshToken, settings.AccessTokenLifetimeSeconds));
     }
 }

@@ -1,11 +1,12 @@
 using DependencyModules.Runtime.Attributes;
+using Microsoft.Extensions.Logging;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
 using WorldsOfTheNextRealm.BackendCommon.DataStore;
 
 namespace WorldsOfTheNextRealm.AuthenticationService.Services;
 
 [SingletonService]
-public class AccountLockoutService(IDataStore dataStore, IClock clock) : IAccountLockoutService
+public class AccountLockoutService(IDataStore dataStore, IClock clock, ILogger<AccountLockoutService> logger) : IAccountLockoutService
 {
     private const int MaxFailedAttempts = 5;
     private const int LockoutMinutes = 15;
@@ -18,12 +19,14 @@ public class AccountLockoutService(IDataStore dataStore, IClock clock) : IAccoun
 
         if (creds.Status == "locked" && creds.LockUntil > nowMs)
         {
+            logger.LogDebug("Account locked for PlayerId={PlayerId} until={LockUntil}", creds.PlayerId, creds.LockUntil);
             return (true, null);
         }
 
         // Auto-unlock: if locked but lockUntil has passed, reset
         if (creds.Status == "locked" && creds.LockUntil <= nowMs)
         {
+            logger.LogInformation("Account auto-unlocked for PlayerId={PlayerId}", creds.PlayerId);
             var resetData = creds with
             {
                 Status = "active",
@@ -44,6 +47,8 @@ public class AccountLockoutService(IDataStore dataStore, IClock clock) : IAccoun
         var newAttempts = creds.FailedAttempts + 1;
         var nowMs = clock.UtcNow.ToUnixTimeMilliseconds();
 
+        logger.LogDebug("Failed login attempt {Count} for PlayerId={PlayerId}", newAttempts, creds.PlayerId);
+
         PlayerCredentialsData updatedData;
 
         if (newAttempts >= MaxFailedAttempts)
@@ -55,6 +60,7 @@ public class AccountLockoutService(IDataStore dataStore, IClock clock) : IAccoun
                 Status = "locked",
                 LockUntil = lockUntilMs
             };
+            logger.LogInformation("Account locked for PlayerId={PlayerId} after {Count} failed attempts", creds.PlayerId, newAttempts);
         }
         else
         {
@@ -75,6 +81,7 @@ public class AccountLockoutService(IDataStore dataStore, IClock clock) : IAccoun
             return credDoc;
         }
 
+        logger.LogDebug("Resetting failed attempts for PlayerId={PlayerId}", creds.PlayerId);
         var resetData = creds with
         {
             FailedAttempts = 0,

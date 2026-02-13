@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
 using WorldsOfTheNextRealm.AuthenticationService.Models;
@@ -12,12 +13,16 @@ public static class RevokeEndpoint
         HttpContext httpContext,
         ITokenService tokenService,
         IDataStore dataStore,
-        AuthSettings settings)
+        AuthSettings settings,
+        ILoggerFactory loggerFactory)
     {
+        var logger = loggerFactory.CreateLogger(typeof(RevokeEndpoint).FullName!);
+
         // Validate access token from Authorization header
         var authHeader = httpContext.Request.Headers.Authorization.ToString();
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
+            logger.LogDebug("Revoke failed: missing or invalid authorization header");
             return Results.Json(
                 ErrorResponse.Create("invalid_access_token", "Missing or invalid access token."),
                 statusCode: 401);
@@ -61,6 +66,11 @@ public static class RevokeEndpoint
             var revokedFamily = familyDoc.Data with { Status = "revoked" };
             var revokedDoc = familyDoc with { Data = revokedFamily };
             await dataStore.Store(revokedDoc);
+            logger.LogInformation("Token family revoked familyId={FamilyId} PlayerId={PlayerId}", familyId, playerId);
+        }
+        else
+        {
+            logger.LogDebug("Revoke: family not found for familyId={FamilyId}", familyId);
         }
 
         return Results.NoContent();

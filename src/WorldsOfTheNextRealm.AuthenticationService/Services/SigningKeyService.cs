@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using DependencyModules.Runtime.Attributes;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
@@ -12,7 +13,8 @@ public class SigningKeyService(
     IDataStore dataStore,
     IKeyEncryptionService keyEncryption,
     IClock clock,
-    AuthSettings settings) : ISigningKeyService
+    AuthSettings settings,
+    ILogger<SigningKeyService> logger) : ISigningKeyService
 {
     private readonly SemaphoreSlim _lock = new(1, 1);
     private RsaSecurityKey? _cachedKey;
@@ -23,6 +25,7 @@ public class SigningKeyService(
     {
         if (_cachedKey is not null && _cachedKid is not null)
         {
+            logger.LogDebug("Signing key cache hit kid={Kid}", _cachedKid);
             return (_cachedKey, _cachedKid);
         }
 
@@ -31,9 +34,11 @@ public class SigningKeyService(
         {
             if (_cachedKey is not null && _cachedKid is not null)
             {
+                logger.LogDebug("Signing key cache hit kid={Kid}", _cachedKid);
                 return (_cachedKey, _cachedKid);
             }
 
+            logger.LogDebug("Signing key cache miss, loading from store");
             await EnsureActiveKey();
             return (_cachedKey!, _cachedKid!);
         }
@@ -47,6 +52,7 @@ public class SigningKeyService(
     {
         if (_cachedJwks is not null)
         {
+            logger.LogDebug("JWKS cache hit");
             return _cachedJwks;
         }
 
@@ -55,9 +61,11 @@ public class SigningKeyService(
         {
             if (_cachedJwks is not null)
             {
+                logger.LogDebug("JWKS cache hit");
                 return _cachedJwks;
             }
 
+            logger.LogDebug("JWKS cache miss, loading from store");
             await EnsureActiveKey();
             return _cachedJwks!;
         }
@@ -122,6 +130,7 @@ public class SigningKeyService(
 
     private async Task<DataDocument<SigningKeyData>> BootstrapSigningKey()
     {
+        logger.LogInformation("Bootstrapping new signing key");
         var rsa = RSA.Create(2048);
         var kid = $"key-{clock.UtcNow:yyyy-MM-dd}";
 
