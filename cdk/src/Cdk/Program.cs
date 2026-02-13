@@ -1,5 +1,6 @@
 using Amazon.CDK;
 using Amazon.CDK.AWS.DynamoDB;
+using Amazon.CDK.AWS.IAM;
 using Amazon.CDK.AWS.SecretsManager;
 using WorldsOfTheNextRealm.BackendCommon.Cdk;
 
@@ -32,5 +33,11 @@ var authSigningKeys = Table.FromTableName(stack, "AuthSigningKeys", "AuthSigning
 authMain.GrantReadWriteData(stack.Function);
 authCredentials.GrantReadWriteData(stack.Function);
 authSigningKeys.GrantReadWriteData(stack.Function);
+
+stack.Function.AddToRolePolicy(new PolicyStatement(new PolicyStatementProps
+{
+    Actions = new[] { "dynamodb:Query", "dynamodb:Scan" },
+    Resources = new[] { authSigningKeys.TableArn + "/index/gsi1" }
+}));
 
 app.Synth();
