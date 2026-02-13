@@ -78,7 +78,7 @@ jobs:
           aws-region: us-east-1
 
       - name: CDK Deploy
-        run: cdk deploy --all --require-approval never -c env=beta
+        run: cdk deploy --all --require-approval never -c env=beta -c masterEncryptionKey=${{ secrets.AUTH_MASTER_ENCRYPTION_KEY }}
         working-directory: cdk
 
   deploy-prod:
@@ -123,5 +123,5 @@ jobs:
           aws-region: us-east-1
 
       - name: CDK Deploy
-        run: cdk deploy --all --require-approval never -c env=prod
+        run: cdk deploy --all --require-approval never -c env=prod -c masterEncryptionKey=${{ secrets.AUTH_MASTER_ENCRYPTION_KEY }}
         working-directory: cdk
