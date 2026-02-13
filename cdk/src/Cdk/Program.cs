@@ -1,13 +1,11 @@
 using Amazon.CDK;
+using Amazon.CDK.AWS.SecretsManager;
 using WorldsOfTheNextRealm.BackendCommon.Cdk;
 
 var app = new App();
 var config = Config.ResolveEnvironment(app);
 
-var masterKey = app.Node.TryGetContext("masterEncryptionKey")?.ToString()
-    ?? throw new System.Exception("Missing required context: -c masterEncryptionKey=<base64-key>");
-
-new LambdaApiStack(app, $"{config.Prefix}-AuthenticationService", new LambdaApiStackProps
+var stack = new LambdaApiStack(app, $"{config.Prefix}-AuthenticationService", new LambdaApiStackProps
 {
     Env = config.Env,
     Prefix = config.Prefix,
@@ -15,8 +13,15 @@ new LambdaApiStack(app, $"{config.Prefix}-AuthenticationService", new LambdaApiS
     PublishPath = "../src/WorldsOfTheNextRealm.AuthenticationService/bin/Release/net8.0/publish",
     Environment = new Dictionary<string, string>
     {
-        ["AuthSettings__MasterEncryptionKey"] = masterKey
+        ["AuthSettings__MasterEncryptionKeySecretId"] = $"{config.Prefix}/auth/master-encryption-key"
     }
 });
+
+var secret = new Secret(stack, "MasterEncryptionKey", new SecretProps
+{
+    SecretName = $"{config.Prefix}/auth/master-encryption-key",
+    Description = "AES-256 master encryption key for signing key encryption"
+});
+secret.GrantRead(stack.Function);
 
 app.Synth();
