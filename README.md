@@ -2,6 +2,8 @@
 
 Handles user registration, login, JWT token issuance, token refresh, and token revocation. Deployed as an ASP.NET Core Lambda function behind API Gateway.
 
+> **[Full project documentation](https://github.com/ipjohnson-org/WorldsOfTheNextRealm.Documentation)** — game design, technical design, API specs, and architecture diagrams.
+
 ---
 
 ## Repository Structure
