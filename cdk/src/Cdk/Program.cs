@@ -1,4 +1,5 @@
 using Amazon.CDK;
+using Amazon.CDK.AWS.DynamoDB;
 using Amazon.CDK.AWS.SecretsManager;
 using WorldsOfTheNextRealm.BackendCommon.Cdk;
 
@@ -23,5 +24,13 @@ var secret = new Secret(stack, "MasterEncryptionKey", new SecretProps
     Description = "AES-256 master encryption key for signing key encryption"
 });
 secret.GrantRead(stack.Function);
+
+var authMain = Table.FromTableName(stack, "AuthMain", "AuthMain");
+var authCredentials = Table.FromTableName(stack, "AuthCredentials", "AuthCredentials");
+var authSigningKeys = Table.FromTableName(stack, "AuthSigningKeys", "AuthSigningKeys");
+
+authMain.GrantReadWriteData(stack.Function);
+authCredentials.GrantReadWriteData(stack.Function);
+authSigningKeys.GrantReadWriteData(stack.Function);
 
 app.Synth();
