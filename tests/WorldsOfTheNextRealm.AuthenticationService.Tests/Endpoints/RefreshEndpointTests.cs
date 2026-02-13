@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using DependencyModules.xUnit.Attributes;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
 using WorldsOfTheNextRealm.AuthenticationService.Models;
@@ -90,7 +92,7 @@ public class RefreshEndpointTests
 
         var result = await AuthenticationService.Endpoints.RefreshEndpoint.Handle(
             new RefreshRequest(tokens.RefreshToken),
-            signingKeyService, dataStore, clock, settings);
+            signingKeyService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(200, httpResult.StatusCode);
@@ -123,12 +125,12 @@ public class RefreshEndpointTests
         // Use the refresh token once (valid)
         await AuthenticationService.Endpoints.RefreshEndpoint.Handle(
             new RefreshRequest(originalRefreshToken),
-            signingKeyService, dataStore, clock, settings);
+            signingKeyService, dataStore, clock, settings, new NullLoggerFactory());
 
         // Replay the same token (should detect theft)
         var replayResult = await AuthenticationService.Endpoints.RefreshEndpoint.Handle(
             new RefreshRequest(originalRefreshToken),
-            signingKeyService, dataStore, clock, settings);
+            signingKeyService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(replayResult);
         Assert.Equal(401, httpResult.StatusCode);
@@ -145,7 +147,7 @@ public class RefreshEndpointTests
     {
         var result = await AuthenticationService.Endpoints.RefreshEndpoint.Handle(
             new RefreshRequest("nonexistent-family-id.invalidtoken"),
-            signingKeyService, dataStore, clock, settings);
+            signingKeyService, dataStore, clock, settings, new NullLoggerFactory());
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(401, httpResult.StatusCode);

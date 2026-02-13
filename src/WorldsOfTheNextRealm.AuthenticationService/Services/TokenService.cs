@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using DependencyModules.Runtime.Attributes;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
@@ -14,12 +15,14 @@ public class TokenService(
     ISigningKeyService signingKeyService,
     IDataStore dataStore,
     IClock clock,
-    AuthSettings settings) : ITokenService
+    AuthSettings settings,
+    ILogger<TokenService> logger) : ITokenService
 {
     private static readonly JsonWebTokenHandler TokenHandler = new();
 
     public async Task<AuthResponse> CreateTokenPair(string playerId)
     {
+        logger.LogDebug("Creating token pair for PlayerId={PlayerId}", playerId);
         var (signingKey, kid) = await signingKeyService.GetActiveSigningKey();
         var now = clock.UtcNow;
 
@@ -69,12 +72,14 @@ public class TokenService(
             Ttl: expiresAtMs / 1000);
 
         await dataStore.Store(familyDoc);
+        logger.LogDebug("Token pair created for PlayerId={PlayerId} familyId={FamilyId}", playerId, familyId);
 
         return new AuthResponse(accessToken, refreshToken, settings.AccessTokenLifetimeSeconds);
     }
 
     public async Task<string?> ValidateAccessToken(string token)
     {
+        logger.LogDebug("Validating access token");
         var jwks = await signingKeyService.GetJwks();
 
         var validationParameters = new TokenValidationParameters
@@ -101,9 +106,11 @@ public class TokenService(
 
         if (!result.IsValid)
         {
+            logger.LogDebug("Access token validation failed");
             return null;
         }
 
+        logger.LogDebug("Access token validation succeeded");
         return result.Claims.TryGetValue("sub", out var sub) ? sub?.ToString() : null;
     }
 

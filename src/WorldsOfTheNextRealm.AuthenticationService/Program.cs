@@ -7,6 +7,15 @@ using WorldsOfTheNextRealm.AuthenticationService.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options =>
+{
+    options.UseUtcTimestamp = true;
+    options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+});
+builder.Logging.SetMinimumLevel(LogLevel.Warning);
+builder.Logging.AddFilter("WorldsOfTheNextRealm", LogLevel.Debug);
+
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.HttpApi);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
