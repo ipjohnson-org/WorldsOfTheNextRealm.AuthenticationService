@@ -48,6 +48,11 @@ public static class LoginEndpoint
         }
 
         var playerId = emailDoc.Data.PlayerId;
+        if (string.IsNullOrEmpty(playerId))
+        {
+            logger.LogWarning("Email lookup found record but PlayerId is null for email={MaskedEmail}", LogSanitizer.MaskEmail(request.Email));
+            return Results.Json(invalidCredentialsResponse, statusCode: 401);
+        }
         logger.LogDebug("Email resolved to PlayerId={PlayerId}", playerId);
 
         // Get credentials
