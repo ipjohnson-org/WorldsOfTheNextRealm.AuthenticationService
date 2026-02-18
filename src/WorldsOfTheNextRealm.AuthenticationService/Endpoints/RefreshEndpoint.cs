@@ -96,6 +96,8 @@ public static class RefreshEndpoint
             [
                 new System.Security.Claims.Claim("sub", family.PlayerId),
                 new System.Security.Claims.Claim("jti", Guid.NewGuid().ToString()),
+                new System.Security.Claims.Claim("agent", family.Agent),
+                new System.Security.Claims.Claim("sid", family.SessionId ?? ""),
             ]),
             IssuedAt = now.UtcDateTime,
             Expires = now.AddSeconds(settings.AccessTokenLifetimeSeconds).UtcDateTime,

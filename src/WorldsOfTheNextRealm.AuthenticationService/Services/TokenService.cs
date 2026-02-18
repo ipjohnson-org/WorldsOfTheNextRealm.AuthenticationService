@@ -7,6 +7,7 @@ using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Entities;
 using WorldsOfTheNextRealm.AuthenticationService.Models;
 using WorldsOfTheNextRealm.BackendCommon.DataStore;
+using WorldsOfTheNextRealm.BackendCommon.Tracing;
 
 namespace WorldsOfTheNextRealm.AuthenticationService.Services;
 
@@ -20,11 +21,12 @@ public class TokenService(
 {
     private static readonly JsonWebTokenHandler TokenHandler = new();
 
-    public async Task<AuthResponse> CreateTokenPair(string playerId)
+    public async Task<AuthResponse> CreateTokenPair(string playerId, string agent = "none")
     {
         logger.LogDebug("Creating token pair for PlayerId={PlayerId}", playerId);
         var (signingKey, kid) = await signingKeyService.GetActiveSigningKey();
         var now = clock.UtcNow;
+        var sessionId = TraceIdGenerator.Generate();
 
         // Create access token
         var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.RsaSha256);
@@ -34,6 +36,8 @@ public class TokenService(
             [
                 new System.Security.Claims.Claim("sub", playerId),
                 new System.Security.Claims.Claim("jti", Guid.NewGuid().ToString()),
+                new System.Security.Claims.Claim("agent", agent),
+                new System.Security.Claims.Claim("sid", sessionId),
             ]),
             IssuedAt = now.UtcDateTime,
             Expires = now.AddSeconds(settings.AccessTokenLifetimeSeconds).UtcDateTime,
@@ -60,7 +64,9 @@ public class TokenService(
             Sequence: 1,
             Status: "active",
             CreatedAt: nowMs,
-            ExpiresAt: expiresAtMs);
+            ExpiresAt: expiresAtMs,
+            Agent: agent,
+            SessionId: sessionId);
 
         var familyDoc = new DataDocument<RefreshTokenFamilyData>(
             settings.MainTableName,
