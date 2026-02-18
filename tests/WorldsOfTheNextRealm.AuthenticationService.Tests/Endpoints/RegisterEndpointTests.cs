@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.JsonWebTokens;
 using DependencyModules.xUnit.Attributes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -89,6 +90,34 @@ public class RegisterEndpointTests
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
         Assert.Equal(422, httpResult.StatusCode);
+    }
+
+    [ModuleTest]
+    [AuthDynamoTest]
+    [TestAuthSettings]
+    public async Task Register_HappyPath_AccessTokenContainsAgentAndSidClaims(
+        IEmailValidator emailValidator,
+        IPasswordValidator passwordValidator,
+        IPasswordHasher passwordHasher,
+        ITokenService tokenService,
+        IDataStore dataStore,
+        IClock clock,
+        AuthSettings settings)
+    {
+        var request = new AuthRequest("claimstest@example.com", "StrongPass1");
+
+        var result = await AuthenticationService.Endpoints.RegisterEndpoint.Handle(
+            request, emailValidator, passwordValidator, passwordHasher,
+            tokenService, dataStore, clock, settings, new NullLoggerFactory());
+
+        var valueResult = Assert.IsAssignableFrom<IValueHttpResult>(result);
+        var authResponse = Assert.IsType<AuthResponse>(valueResult.Value);
+
+        var handler = new JsonWebTokenHandler();
+        var jwt = handler.ReadJsonWebToken(authResponse.AccessToken);
+
+        Assert.Equal("none", jwt.Claims.First(c => c.Type == "agent").Value);
+        Assert.NotEmpty(jwt.Claims.First(c => c.Type == "sid").Value);
     }
 
     [ModuleTest]

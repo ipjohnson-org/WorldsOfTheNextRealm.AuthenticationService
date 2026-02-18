@@ -1,3 +1,4 @@
+using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Cryptography;
 using DependencyModules.xUnit.Attributes;
 using Microsoft.AspNetCore.Http;
@@ -134,6 +135,40 @@ public class RefreshEndpointTests
 
         var httpResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(replayResult);
         Assert.Equal(401, httpResult.StatusCode);
+    }
+
+    [ModuleTest]
+    [AuthDynamoTest]
+    [TestAuthSettings]
+    public async Task Refresh_HappyPath_PreservesAgentAndSidClaims(
+        IPasswordHasher passwordHasher,
+        IKeyEncryptionService keyEncryption,
+        ITokenService tokenService,
+        ISigningKeyService signingKeyService,
+        IDataStore dataStore,
+        IClock clock,
+        AuthSettings settings)
+    {
+        var tokens = await RegisterAndGetTokens(
+            passwordHasher, keyEncryption,
+            tokenService, dataStore, clock, settings,
+            "claimspreserve@example.com");
+
+        // Parse the original access token to get the session ID
+        var handler = new JsonWebTokenHandler();
+        var originalJwt = handler.ReadJsonWebToken(tokens.AccessToken);
+        var originalSid = originalJwt.Claims.First(c => c.Type == "sid").Value;
+
+        var result = await AuthenticationService.Endpoints.RefreshEndpoint.Handle(
+            new RefreshRequest(tokens.RefreshToken),
+            signingKeyService, dataStore, clock, settings, new NullLoggerFactory());
+
+        var valueResult = Assert.IsAssignableFrom<IValueHttpResult>(result);
+        var newTokens = Assert.IsType<AuthResponse>(valueResult.Value);
+
+        var refreshedJwt = handler.ReadJsonWebToken(newTokens.AccessToken);
+        Assert.Equal("none", refreshedJwt.Claims.First(c => c.Type == "agent").Value);
+        Assert.Equal(originalSid, refreshedJwt.Claims.First(c => c.Type == "sid").Value);
     }
 
     [ModuleTest]
