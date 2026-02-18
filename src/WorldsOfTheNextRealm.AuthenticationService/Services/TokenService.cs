@@ -26,7 +26,7 @@ public class TokenService(
         logger.LogDebug("Creating token pair for PlayerId={PlayerId}", playerId);
         var (signingKey, kid) = await signingKeyService.GetActiveSigningKey();
         var now = clock.UtcNow;
-        var sessionId = TraceIdGenerator.Generate();
+        var sessionId = IdGenerator.NewSessionId();
 
         // Create access token
         var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.RsaSha256);
