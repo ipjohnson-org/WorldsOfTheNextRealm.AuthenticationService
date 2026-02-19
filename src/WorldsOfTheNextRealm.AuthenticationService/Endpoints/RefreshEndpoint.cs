@@ -6,6 +6,7 @@ using WorldsOfTheNextRealm.AuthenticationService.Entities;
 using WorldsOfTheNextRealm.AuthenticationService.Models;
 using WorldsOfTheNextRealm.AuthenticationService.Services;
 using WorldsOfTheNextRealm.BackendCommon.DataStore;
+using WorldsOfTheNextRealm.BackendCommon.Tracing;
 
 namespace WorldsOfTheNextRealm.AuthenticationService.Endpoints;
 
@@ -75,11 +76,16 @@ public static class RefreshEndpoint
         var newRefreshToken = $"{familyId}.{randomPart}";
         var newTokenHash = TokenService.ComputeSha256(newRefreshToken);
 
-        // Update family
+        // Update family (backfill session ID if missing from pre-migration records)
+        var sessionId = string.IsNullOrEmpty(family.SessionId)
+            ? IdGenerator.NewSessionId()
+            : family.SessionId;
+
         var updatedFamily = family with
         {
             CurrentTokenHash = newTokenHash,
-            Sequence = family.Sequence + 1
+            Sequence = family.Sequence + 1,
+            SessionId = sessionId
         };
         var updatedDoc = familyDoc with { Data = updatedFamily };
         await dataStore.Store(updatedDoc);
@@ -97,7 +103,7 @@ public static class RefreshEndpoint
                 new System.Security.Claims.Claim("sub", family.PlayerId),
                 new System.Security.Claims.Claim("jti", Guid.NewGuid().ToString()),
                 new System.Security.Claims.Claim("agent", family.Agent),
-                new System.Security.Claims.Claim("sid", family.SessionId ?? ""),
+                new System.Security.Claims.Claim("sid", sessionId),
             ]),
             IssuedAt = now.UtcDateTime,
             Expires = now.AddSeconds(settings.AccessTokenLifetimeSeconds).UtcDateTime,
