@@ -15,7 +15,8 @@
     <PackageReference Include="DependencyModules.xUnit.NSubstitute" Version="1.0.0-RC9153" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="Testcontainers.DynamoDb" Version="4.10.0" />
-    <PackageReference Include="WorldsOfTheNextRealm.BackendCommon.Testing" Version="0.1.*" />
+    <PackageReference Condition="'$(UseLocalBackendCommonTesting)' != 'true'" Include="WorldsOfTheNextRealm.BackendCommon.Testing" Version="0.1.*" />
+    <ProjectReference Condition="'$(UseLocalBackendCommonTesting)' == 'true'" Include="$(WotnrBackendCommonTestingProject)" />
     <PackageReference Include="xunit.v3" Version="1.0.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>

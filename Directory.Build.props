@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <_WotnrCommonRoot>$(MSBuildThisFileDirectory)../WorldsOfTheNextRealm.BackendCommon/src</_WotnrCommonRoot>
+    <WotnrBackendCommonProject>$(_WotnrCommonRoot)/WorldsOfTheNextRealm.BackendCommon/WorldsOfTheNextRealm.BackendCommon.csproj</WotnrBackendCommonProject>
+    <WotnrBackendCommonCdkProject>$(_WotnrCommonRoot)/WorldsOfTheNextRealm.BackendCommon.Cdk/WorldsOfTheNextRealm.BackendCommon.Cdk.csproj</WotnrBackendCommonCdkProject>
+    <WotnrBackendCommonTestingProject>$(_WotnrCommonRoot)/WorldsOfTheNextRealm.BackendCommon.Testing/WorldsOfTheNextRealm.BackendCommon.Testing.csproj</WotnrBackendCommonTestingProject>
+    <UseLocalBackendCommon Condition="Exists('$(WotnrBackendCommonProject)')">true</UseLocalBackendCommon>
+    <UseLocalBackendCommonCdk Condition="Exists('$(WotnrBackendCommonCdkProject)')">true</UseLocalBackendCommonCdk>
+    <UseLocalBackendCommonTesting Condition="Exists('$(WotnrBackendCommonTestingProject)')">true</UseLocalBackendCommonTesting>
+  </PropertyGroup>
+</Project>
