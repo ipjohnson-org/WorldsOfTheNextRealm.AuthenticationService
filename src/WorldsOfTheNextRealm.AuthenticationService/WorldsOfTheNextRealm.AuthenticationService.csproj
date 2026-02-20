@@ -16,7 +16,8 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.*" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.*" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-    <PackageReference Include="WorldsOfTheNextRealm.BackendCommon" Version="0.1.*" />
+    <PackageReference Condition="'$(UseLocalBackendCommon)' != 'true'" Include="WorldsOfTheNextRealm.BackendCommon" Version="0.1.*" />
+    <ProjectReference Condition="'$(UseLocalBackendCommon)' == 'true'" Include="$(WotnrBackendCommonProject)" />
   </ItemGroup>
 
 </Project>
