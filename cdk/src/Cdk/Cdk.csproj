@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Amazon.CDK.Lib" Version="2.*" />
-    <PackageReference Include="Constructs" Version="[10.0.0,11.0.0)" />
+    <PackageReference Include="Constructs" Version="10.*" />
     <PackageReference Condition="'$(UseLocalBackendCommonCdk)' != 'true'" Include="WorldsOfTheNextRealm.BackendCommon.Cdk" Version="0.1.*" />
     <ProjectReference Condition="'$(UseLocalBackendCommonCdk)' == 'true'" Include="$(WotnrBackendCommonCdkProject)" />
   </ItemGroup>
