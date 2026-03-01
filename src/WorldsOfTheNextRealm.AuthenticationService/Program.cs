@@ -4,6 +4,7 @@ using DependencyModules.Runtime;
 using WorldsOfTheNextRealm.AuthenticationService;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
 using WorldsOfTheNextRealm.AuthenticationService.Endpoints;
+using WorldsOfTheNextRealm.BackendCommon.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,13 @@ if (!string.IsNullOrEmpty(authSettings.MasterEncryptionKeySecretId))
 }
 
 builder.Services.AddSingleton(authSettings);
+
+// Register SigningKeySettings for BackendCommon's shared signing key services
+builder.Services.AddSingleton(new SigningKeySettings
+{
+    SigningKeysTableName = authSettings.SigningKeysTableName,
+    MasterEncryptionKey = authSettings.MasterEncryptionKey,
+});
 
 // Register DependencyModules
 builder.Services.AddModule<AuthenticationServiceModule>();

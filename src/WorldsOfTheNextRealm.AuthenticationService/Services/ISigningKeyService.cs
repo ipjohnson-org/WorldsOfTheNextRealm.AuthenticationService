@@ -1,6 +1,4 @@
 using Microsoft.IdentityModel.Tokens;
-using WorldsOfTheNextRealm.AuthenticationService.Entities;
-using WorldsOfTheNextRealm.BackendCommon.DataStore;
 
 namespace WorldsOfTheNextRealm.AuthenticationService.Services;
 
