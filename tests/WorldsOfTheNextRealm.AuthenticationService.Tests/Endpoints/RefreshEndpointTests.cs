@@ -10,6 +10,7 @@ using WorldsOfTheNextRealm.AuthenticationService.Models;
 using WorldsOfTheNextRealm.AuthenticationService.Services;
 using WorldsOfTheNextRealm.AuthenticationService.Tests.TestHelpers;
 using WorldsOfTheNextRealm.BackendCommon.DataStore;
+using WorldsOfTheNextRealm.BackendCommon.Security;
 
 namespace WorldsOfTheNextRealm.AuthenticationService.Tests.Endpoints;
 
@@ -34,9 +35,9 @@ public class RefreshEndpointTests
 
         var doc = new DataDocument<SigningKeyData>(
             settings.SigningKeysTableName,
-            DataKeys.SigningKeyKey(kid),
+            SigningKeyConstants.SigningKeyKey(kid),
             keyData, 0,
-            Gsi1Pk: DataKeys.SigningKeysGsi1Pk,
+            Gsi1Pk: SigningKeyConstants.SigningKeysGsi1Pk,
             Gsi1Sk: nowMs.ToString("D20"));
 
         await dataStore.Store(doc);

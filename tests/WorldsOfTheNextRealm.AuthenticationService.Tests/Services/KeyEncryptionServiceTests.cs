@@ -1,6 +1,6 @@
 using DependencyModules.xUnit.Attributes;
-using WorldsOfTheNextRealm.AuthenticationService.Services;
 using WorldsOfTheNextRealm.AuthenticationService.Tests.TestHelpers;
+using WorldsOfTheNextRealm.BackendCommon.Security;
 
 namespace WorldsOfTheNextRealm.AuthenticationService.Tests.Services;
 

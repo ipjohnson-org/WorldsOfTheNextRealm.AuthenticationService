@@ -13,11 +13,6 @@ public static class DataKeys
     public static string RefreshFamilyKey(string familyId) =>
         DataKeyBuilder.BuildKey("refresh-family", familyId);
 
-    public static string SigningKeyKey(string kid) =>
-        DataKeyBuilder.BuildKey("signing-key", kid);
-
     public static string PlayerRefreshGsi1Pk(string playerId) =>
         $"player-refresh/{playerId}";
-
-    public const string SigningKeysGsi1Pk = "signing-keys";
 }

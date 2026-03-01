@@ -3,8 +3,8 @@ using DependencyModules.Runtime.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
-using WorldsOfTheNextRealm.AuthenticationService.Entities;
 using WorldsOfTheNextRealm.BackendCommon.DataStore;
+using WorldsOfTheNextRealm.BackendCommon.Security;
 
 namespace WorldsOfTheNextRealm.AuthenticationService.Services;
 
@@ -80,7 +80,7 @@ public class SigningKeyService(
         // Query all signing keys from GSI1
         var result = await dataStore.QueryGsi1<SigningKeyData>(
             settings.SigningKeysTableName,
-            DataKeys.SigningKeysGsi1Pk,
+            SigningKeyConstants.SigningKeysGsi1Pk,
             scanForward: false,
             limit: 10);
 
@@ -153,10 +153,10 @@ public class SigningKeyService(
 
         var doc = new DataDocument<SigningKeyData>(
             settings.SigningKeysTableName,
-            DataKeys.SigningKeyKey(kid),
+            SigningKeyConstants.SigningKeyKey(kid),
             keyData,
             0,
-            Gsi1Pk: DataKeys.SigningKeysGsi1Pk,
+            Gsi1Pk: SigningKeyConstants.SigningKeysGsi1Pk,
             Gsi1Sk: nowMs.ToString("D20"));
 
         return await dataStore.Store(doc);

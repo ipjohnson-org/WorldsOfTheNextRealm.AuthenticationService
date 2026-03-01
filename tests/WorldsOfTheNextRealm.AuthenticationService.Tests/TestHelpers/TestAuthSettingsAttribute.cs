@@ -2,6 +2,7 @@ using DependencyModules.xUnit.Attributes.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WorldsOfTheNextRealm.AuthenticationService.Configuration;
+using WorldsOfTheNextRealm.BackendCommon.Security;
 using Xunit.v3;
 
 namespace WorldsOfTheNextRealm.AuthenticationService.Tests.TestHelpers;
@@ -24,6 +25,11 @@ public class TestAuthSettingsAttribute : Attribute, ITestStartupAttribute
         };
 
         serviceCollection.AddSingleton(settings);
+        serviceCollection.AddSingleton(new SigningKeySettings
+        {
+            SigningKeysTableName = settings.SigningKeysTableName,
+            MasterEncryptionKey = settings.MasterEncryptionKey,
+        });
         serviceCollection.AddLogging();
     }
 
